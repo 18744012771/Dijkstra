@@ -118,14 +118,18 @@ void Graph_DG::loaddMap(QString s){
         {
            QByteArray ba = file->readLine();
            QString s(ba);
-           int x=s.section(" ",0,0).toInt();
-           int y=s.section(" ",1,1).toInt();
-           float w=s.section(" ",2,2).toFloat();
+           int index=s.section(" ",0,0).toInt();
+           int x=s.section(" ",1,1).toInt();
+           int y=s.section(" ",2,2).toInt();
+           float w=s.section(" ",3,3).toFloat();
            qDebug()<<x<<y<<w;
            points.insert(x);
            points.insert(y);
-           Edge edge(x,y,w);
+           Edge edge(index,x,y,w);
            edges.append(edge);
+           hash[QPair<int,int>(x,y)]=index;
+           hash[QPair<int,int>(y,x)]=index;
+           edgeCount[index]=0;
 
         }
         vexnum = points.size();
@@ -136,16 +140,6 @@ void Graph_DG::loaddMap(QString s){
 }
 
 void Graph_DG::Dijkstra(int begin){
-
-    //Dis dis1[const_static<int>(vexnum)];
-
-
-
-
-
-
-
-
 
     QVector<Path> vec;
 
@@ -166,10 +160,7 @@ void Graph_DG::Dijkstra(int begin){
        // qDebug()<<"初始化"<<dis[i].path;
 
         vec.push_back(p);
-
-
-
-    }
+     }
     //设置起点的到起点的路径为0
     dis[begin - 1].value = 0;
     dis[begin - 1].visit = true;
@@ -202,10 +193,6 @@ void Graph_DG::Dijkstra(int begin){
                 vec[i].points=vec[temp].points;
                 vec[i].points<<i+1;
                 vec[i].w=vec[temp].w+arc[temp][i];
-                //qDebug()<<"----"<<dis[i].path ;
-
-
-
 
             }
 
@@ -213,42 +200,39 @@ void Graph_DG::Dijkstra(int begin){
 
         }
 
-    }
-//    for (i = 0; i < this->vexnum; i++)
-//    qDebug()<<QString::number(vec[i].start)<<":"<<QString::number(vec[i].end)<<"--"<<vec[i].points;
+ }
+
     paths.push_back(vec);
 
 }
 
 
 
-void Graph_DG::print_path(int begin) {
 
-
-
-    QString str;
-    str = "v" + QString::number(begin);
-    qDebug() << "以" << str << "为起点的图的最短路径为：" ;
-    for (int i = 0; i != this->vexnum; i++) {
-        if (dis[i].value != INT_MAX)
-        {
-
-            qDebug()  << dis[i].path << "=" << dis[i].value  ;
-        }
-
-
-        else {
-            qDebug()  << dis[i].path << "是无最短路径的"  ;
-        }
-    }
-}
 
 
 void Graph_DG::print_paths(){
     for(auto it=paths.begin();it!=paths.end();it++){
-        for (int i=0;i<this->vexnum;i++)
-            qDebug()<<(*it)[i].start<<(*it)[i].end<<(*it)[i].points<<(*it)[i].w;
+        for (int i=0;i<this->vexnum;i++){
+            int start=(*it)[i].start;
+            int end=(*it)[i].end;
+            QList<int> points=(*it)[i].points;
+            float w=(*it)[i].w;
+            qDebug()<< start<< end<< points<< w;
+            for(auto it=(points.constBegin()++);it!=points.constEnd();it++)
+            {
+                QPair<int,int>pair=QPair<int,int>(start,*it);
+                if(hash.find(pair)!=hash.constEnd())
+                    edgeCount[hash[pair]]++;
+                //if()
+            }
+        }
+
+
+
     }
+    for(auto it=edgeCount.constBegin();it!=edgeCount.constEnd();it++)
+        qDebug()<<it.key()<<""<<it.value();
 
 }
 
@@ -256,7 +240,7 @@ void Graph_DG::computeAll(){
     for(auto it = points.begin();it!=points.end();it++)
     {
          Dijkstra(*it);
-         //print_path(*it);
+
          delete dis;
          dis = new Dis[this->vexnum];
     }

@@ -11,7 +11,9 @@
 #include <QVector>
 
 struct Edge {
-   Edge(int x1,int y1,float w1):x(x1),y(y1),w(w1){}
+   Edge(int index1,int x1,int y1,float w1):index(index1),x(x1),y(y1),w(w1){}
+
+   int index ;
    int x;
    int y;
    float w;
@@ -62,8 +64,7 @@ public:
     void print();
     //求最短路径
     void Dijkstra(int begin);
-    //打印最短路径
-    void print_path(int);
+
     void computeAll();
 
     void loaddMap(QString);
@@ -81,6 +82,10 @@ private:
     QSet<int > points;
     QList<Edge> edges;
     QVector<QVector<Path>> paths;
+
+    QHash<QPair<int,int>,int> hash;
+    QHash<int,int>edgeCount;
+
 
 
 
